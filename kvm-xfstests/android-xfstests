@@ -332,6 +332,20 @@ EOF
     chroot_prepare
 }
 
+setup_test_env()
+{
+    cat > "$tmpfile" <<EOF
+export FSTESTAPI="$(echo $API | sed -e 's/\./ /g')"
+export FSTESTCFG="$(echo $FSTESTCFG | sed -e 's/,/ /g')"
+export FSTESTSET="$(echo $FSTESTSET | sed -e 's/,/ /g')"
+export FSTESTOPT="$(echo $FSTESTOPT | sed -e 's/,/ /g')"
+export FSTESTTYP="$PRIMARY_FSTYPE"
+export MNTOPTS="$MNTOPTS"
+export FSTESTEXC="$(echo $FSTESTEXC | sed -e 's/,/ /g')"
+EOF
+    adb push "$tmpfile" $CHROOT_DIR/root/test-env > /dev/null
+}
+
 try_shrink_userdata()
 {
     cat <<EOF
@@ -443,6 +457,7 @@ while true; do
     if $want_shell && xfstests_running; then
 	break
     fi
+    setup_test_env
     if setup_partitions; then
 	break
     fi
@@ -468,14 +483,7 @@ cat > "$tmpfile" <<EOF
 
 cd /root
 . test-config
-
-export FSTESTAPI="$(echo $API | sed -e 's/\./ /g')"
-export FSTESTCFG="$(echo $FSTESTCFG | sed -e 's/,/ /g')"
-export FSTESTSET="$(echo $FSTESTSET | sed -e 's/,/ /g')"
-export FSTESTOPT="$(echo $FSTESTOPT | sed -e 's/,/ /g')"
-export FSTESTTYP="$PRIMARY_FSTYPE"
-export MNTOPTS="$MNTOPTS"
-export FSTESTEXC="$(echo $FSTESTEXC | sed -e 's/,/ /g')"
+. test-env
 
 umount \$PRI_TST_MNT &> /dev/null
 umount \$SM_TST_MNT &> /dev/null

@@ -23,12 +23,40 @@ set -e -u -o pipefail
 RESULT_FILE=/setup-partitions-result
 rm -f $RESULT_FILE
 
+. /root/test-env
+[ -e /root/runtests_utils ] && . /root/runtests_utils
+
 # Partitions to create: their names, their sizes in GiB, and whether they are
 # required or not.  If a partition is not required, then we create it only if
 # there is enough space.
-PARTITION_NAMES=(PRI_TST_DEV SM_TST_DEV SM_SCR_DEV LG_TST_DEV LG_SCR_DEV)
-PARTITION_SIZES=(5 5 5 20 20)
-PARTITION_REQUIRED=(true true true false false)
+PARTITION_NAMES=(PRI_TST_DEV)
+PARTITION_SIZES=(5)
+PARTITION_REQUIRED=(true)
+setup_partition_list()
+{
+    local part_name part_size
+
+    if compute_partition_sizes; then
+	for part_name in ${!REQUIRED_PARTITION_SIZE[@]}; do
+	    if [ $part_name = "TOTAL_SIZE" ]; then
+		continue
+	    fi
+	    part_size=${REQUIRED_PARTITION_SIZE[$part_name]}
+	    if [ $part_size = 0 ]; then
+		continue
+	    fi
+	    PARTITION_NAMES+=(${part_name}_DEV)
+	    PARTITION_SIZES+=($part_size)
+	    PARTITION_REQUIRED+=(true)
+	done
+    else
+	PARTITION_NAMES+=(SM_TST_DEV SM_SCR_DEV LG_TST_DEV LG_SCR_DEV)
+	PARTITION_SIZES+=(5 5 20 20)
+	PARTITION_REQUIRED+=(true true false false)
+    fi
+}
+
+setup_partition_list
 
 BYTES_PER_GIB=$(( 1 << 30 ))
 START_PARTITION_NUMBER=100

@@ -1,3 +1,5 @@
+FS_CONFIGURED=
+
 function get_fs_config()
 {
     local fs="$1"
@@ -86,7 +88,7 @@ function get_one_fs_config() {
 	echo "Unknown configuration $FS/$i"
 	return 1
     fi
-    if test -z "$TEST_DEV" ; then
+    if test -z "${TEST_DEV:-}" ; then
 	if test -z "$SIZE" ; then
 	    echo "No TEST_DEV and no SIZE"
 	    return 1
@@ -145,7 +147,7 @@ function compute_partition_sizes()
 	    continue
 	fi
 	# Find the right TST_DEV
-	if test -z "$TEST_DEV" ; then
+	if test -z "${TEST_DEV:-}" ; then
 	    if test "$SIZE" = "large" ; then
 		lg_tst=true
 	    else
@@ -188,7 +190,7 @@ function compute_partition_sizes()
 	fi
 
 	# Find the right SCR_DEV
-	if test -z "$SCRATCH_DEV" ; then
+	if test -z "${SCRATCH_DEV:-}" ; then
 	    if test "$SIZE" = "large" ; then
 		lg_scr=true
 	    else

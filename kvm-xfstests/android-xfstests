@@ -110,7 +110,7 @@ wait_for_device()
     if ! adb root > /dev/null ; then
 	die "Unable to restart adbd as root on the device.  Maybe your device is not rooted?"
     fi
-    adb shell "setenforce 0"
+    adb shell "if type -P setenforce &> /dev/null; then setenforce 0; fi"
 }
 
 wait_for_adb()

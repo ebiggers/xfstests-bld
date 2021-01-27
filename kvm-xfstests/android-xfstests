@@ -256,6 +256,7 @@ for i in \`seq 0 7\`; do
 		mknod /dev/loop\$i b 7 \$i
 	fi
 done
+exit
 EOF
 }
 
@@ -270,6 +271,7 @@ umount $CHROOT_DIR/dev &> /dev/null
 umount $CHROOT_DIR/results &> /dev/null
 rm -rf $CHROOT_DIR
 mkdir $CHROOT_DIR
+exit
 EOF
 }
 
@@ -305,7 +307,8 @@ setup_chroot()
 	echo "Finished downloading chroot tarball."
     fi
     local old_md5sum="$(adb shell '[ -e '$CHROOT_DIR'/chroot_md5sum ] &&
-					cat '$CHROOT_DIR'/chroot_md5sum')"
+					cat '$CHROOT_DIR'/chroot_md5sum' \
+			| tr -d '\r')"
     local new_md5sum="$(md5sum "$ROOT_FS" | cut -d' ' -f1)"
     if [ "$old_md5sum" = "$new_md5sum" ]; then
 	chroot_prepare
@@ -333,6 +336,7 @@ setup_chroot()
 $decompress "$destfile" | tar -C $CHROOT_DIR -x
 mv $CHROOT_DIR/root/test-config $CHROOT_DIR/root/test-config.orig
 echo $new_md5sum > $CHROOT_DIR/chroot_md5sum
+exit
 EOF
     adb push "$DIR/test-appliance/android-test-config" "$CHROOT_DIR/root/test-config"
     chroot_prepare
@@ -499,7 +503,9 @@ umount \$SM_SCR_MNT &> /dev/null
 umount \$LG_TST_MNT &> /dev/null
 umount \$LG_SCR_MNT &> /dev/null
 
-./runtests.sh
+# Hack: launch runtests.sh through python3 to reset the default SIGPIPE handler
+# to avoid "broken pipe" errors when using Busybox sh.
+python3 -c 'import subprocess; subprocess.run(["./runtests.sh"])'
 EOF
 adb push "$tmpfile" $CHROOT_DIR/run-xfstests > /dev/null
 adb shell "chmod +x $CHROOT_DIR/run-xfstests"

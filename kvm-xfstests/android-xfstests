@@ -309,6 +309,8 @@ setup_chroot()
 
     # Create /dev/block/* and /dev/block/by-name/* if they are missing.
     # They may be missing if udev isn't running.
+    #
+    # Also mount /data if it isn't already mounted.
     adb shell << EOF
 mkdir -p /dev/block
 mkdir -p /dev/block/by-name
@@ -325,6 +327,10 @@ for dev_dir in /sys/class/block/*; do
 		ln -sf \$node /dev/block/by-name/\$partname
 	fi
 done
+if [ ! -e /data ]; then
+	mkdir /data
+	mount /dev/block/by-name/userdata /data
+fi
 exit
 EOF
 

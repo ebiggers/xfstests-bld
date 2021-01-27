@@ -306,6 +306,28 @@ setup_chroot()
 	wget -O "$ROOT_FS" "$ROOT_FS_URL"
 	echo "Finished downloading chroot tarball."
     fi
+
+    # Create /dev/block/* and /dev/block/by-name/* if they are missing.
+    # They may be missing if udev isn't running.
+    adb shell << EOF
+mkdir -p /dev/block
+mkdir -p /dev/block/by-name
+for dev_dir in /sys/class/block/*; do
+	dev_num=\$(cat \$dev_dir/dev)
+	major=\$(echo \$dev_num | cut -f1 -d:)
+	minor=\$(echo \$dev_num | cut -f2 -d:)
+	node=/dev/block/\$(basename \$dev_dir)
+	if [ ! -e \$node ]; then
+		mknod \$node b \$major \$minor
+	fi
+	partname=\$(cat \$dev_dir/uevent | grep PARTNAME | sed 's/.*=//')
+	if [ -n "\$partname" ]; then
+		ln -sf \$node /dev/block/by-name/\$partname
+	fi
+done
+exit
+EOF
+
     local old_md5sum="$(adb shell '[ -e '$CHROOT_DIR'/chroot_md5sum ] &&
 					cat '$CHROOT_DIR'/chroot_md5sum' \
 			| tr -d '\r')"

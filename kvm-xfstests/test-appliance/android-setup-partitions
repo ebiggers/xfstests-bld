@@ -236,7 +236,7 @@ get_fs_size()
     local device="$1" fstype="$2"
 
     case "$fstype" in
-    ext4)
+    ext2|ext4)
 	dumpe2fs -h "$device" 2>/dev/null | \
 	    awk '/^Block count:/{blockcount=$3}
 		 /^Block size:/{blocksize=$3}
